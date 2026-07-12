@@ -23,7 +23,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen bg-black">
       <nav className="border-b border-zinc-900 px-6 py-4 flex items-center justify-between">
-        <span className="text-white font-medium">ReconIQ</span>
+        <div className="flex items-center gap-6">
+          <span className="text-white font-medium">ReconIQ</span>
+          <div className="hidden sm:flex items-center gap-4 text-sm text-zinc-400">
+            <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+            <Link href="/uploads" className="hover:text-white transition-colors">Upload</Link>
+            <Link href="/invoices" className="hover:text-white transition-colors">Invoices</Link>
+            <Link href="/transactions" className="hover:text-white transition-colors">Transactions</Link>
+          </div>
+        </div>
         <span className="text-sm text-zinc-400">{displayName}</span>
       </nav>
       <main className="max-w-5xl mx-auto px-6 py-8">
