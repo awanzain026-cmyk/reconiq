@@ -9,7 +9,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
     const { data: { user } } = await supabase.auth.getUser();
     displayName = user?.user_metadata?.full_name || user?.email || "";
   } catch (err) {
-    console.error("[dashboard layout] Failed to load user:", err);
+    // DYNAMIC_SERVER_USAGE is Next.js's own expected message during its
+    // build-time static-generation attempt on a route that uses cookies()
+    // -- it always falls back to dynamic rendering correctly. Not a real
+    // error, so don't log it as one (was confusingly showing red in Vercel
+    // build logs on every single deploy).
+    const isDynamicServerUsage = err instanceof Error && "digest" in err && err.digest === "DYNAMIC_SERVER_USAGE";
+    if (!isDynamicServerUsage) {
+      console.error("[dashboard layout] Failed to load user:", err);
+    }
   }
 
   return (
