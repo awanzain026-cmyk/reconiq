@@ -19,8 +19,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   };
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
   // Fail SAFE, not fail OPEN: if env vars are missing, redirect to
   // login rather than crash the whole request (learned the hard way).

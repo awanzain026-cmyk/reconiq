@@ -1,15 +1,17 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // .trim() matters here: a stray trailing newline or space from copy-
+  // pasting a key into Vercel creates an invalid HTTP header value.
+  // Browsers reject constructing such a request outright (producing
+  // exactly "NetworkError when attempting to fetch resource" on every
+  // device, before any real network call happens), while Node's
+  // server-side HTTP client is more lenient and silently tolerates it --
+  // which is exactly why the diagnostic endpoint kept showing success
+  // while login/signup never worked in any browser.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-  // NEXT_PUBLIC_* variables are baked into the browser bundle at BUILD
-  // time, not read live like server-side env vars. If a build ran before
-  // these were set in Vercel, this code ships with literal "undefined"
-  // in place of the URL forever -- until a NEW build happens. That
-  // produces exactly a generic "NetworkError when attempting to fetch
-  // resource" with no useful detail. Fail loud and specific instead.
   if (!url || !key) {
     throw new Error(
       "Supabase browser client misconfigured: NEXT_PUBLIC_SUPABASE_URL or " +
