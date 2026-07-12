@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         due_date: m.due_date ? parseDate(row[m.due_date]) : null,
         status: m.paid_status ? parsePaidStatus(row[m.paid_status]) : "unpaid",
         upload_id: uploadId,
-      })).filter((inv) => inv.invoice_number && inv.amount !== null && inv.issue_date);
+      })).filter((inv) => inv.invoice_number.trim() && inv.customer_name.trim() && inv.amount !== null && inv.issue_date);
 
       if (invoices.length > 0) {
         const { error: insertError } = await supabase.from("invoices").insert(invoices);
