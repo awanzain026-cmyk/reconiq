@@ -14,7 +14,19 @@ interface UploadResult {
 export default function UploadsPage() {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [resetting, setResetting] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  const handleReset = async () => {
+    if (!confirm("This clears all invoices, transactions, matches, and discrepancies. Continue?")) return;
+    setResetting(true);
+    try {
+      await fetch("/api/admin/reset-test-data", { method: "POST" });
+      setResult(null);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -34,9 +46,14 @@ export default function UploadsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-white">Upload Data</h1>
-        <p className="text-sm text-zinc-400 mt-1">Upload a bank statement or invoice CSV. The file type and column structure are detected automatically.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Upload Data</h1>
+          <p className="text-sm text-zinc-400 mt-1">Upload a bank statement or invoice CSV. The file type and column structure are detected automatically.</p>
+        </div>
+        <button onClick={handleReset} disabled={resetting} className="text-xs text-zinc-500 hover:text-red-400 transition-colors whitespace-nowrap disabled:opacity-50">
+          {resetting ? "Clearing..." : "Clear test data"}
+        </button>
       </div>
 
       <div className="border-2 border-dashed border-zinc-800 rounded-xl p-10 text-center">

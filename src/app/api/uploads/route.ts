@@ -57,6 +57,26 @@ export async function POST(req: NextRequest) {
 
     if (structure.file_type === "bank_statement") {
       const m = structure.column_mapping;
+
+      // Safety net: don't depend entirely on the AI getting this right every
+      // time. If it didn't identify a description column, find it ourselves --
+      // the description column is reliably the unused header whose sample
+      // values are the longest free text (a real narrative, not a date/ref/amount).
+      let descriptionColumn = m.description;
+      if (!descriptionColumn) {
+        const usedColumns = new Set([m.transaction_date, m.amount, m.debit_column, m.credit_column, m.reference].filter(Boolean));
+        const unusedHeaders = headers.filter((h) => !usedColumns.has(h));
+        let longest = { header: "", avgLength: 0 };
+        for (const h of unusedHeaders) {
+          const avgLength = rows.slice(0, 5).reduce((sum, r) => sum + (r[h]?.length ?? 0), 0) / Math.max(rows.length, 1);
+          if (avgLength > longest.avgLength) longest = { header: h, avgLength };
+        }
+        if (longest.avgLength > 5) {
+          descriptionColumn = longest.header;
+          console.warn(`[uploads] AI didn't identify a description column -- fell back to '${longest.header}' by content length heuristic`);
+        }
+      }
+
       const transactions = rows.map((row) => {
         let amount: number | null = null;
         if (m.amount) {
@@ -69,7 +89,7 @@ export async function POST(req: NextRequest) {
         return {
           transaction_date: m.transaction_date ? parseDate(row[m.transaction_date]) : null,
           amount,
-          description: m.description ? row[m.description] : "",
+          description: descriptionColumn ? row[descriptionColumn] : "",
           reference: m.reference ? row[m.reference] : null,
           raw_data: row,
           upload_id: uploadId,

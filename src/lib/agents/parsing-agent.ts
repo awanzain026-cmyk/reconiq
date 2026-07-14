@@ -56,7 +56,14 @@ Given the column headers and a few sample rows, determine:
 3. If amount is split into separate debit/credit columns rather than one signed column,
    set debit_column and credit_column instead of amount
 
-Set any field to null if it genuinely isn't present in this file.`,
+For bank statements specifically: the "description" field is REQUIRED and must almost
+never be null. It is the column containing free-text about the transaction -- commonly
+named "Narrative", "Description", "Details", "Memo", "Particulars", or similar. Look at
+the actual sample row VALUES, not just header names, to find it: it will contain readable
+text like "PAYMENT RECEIVED - COMPANY NAME" or similar, clearly longer and more descriptive
+than a date, reference number, or amount column.
+
+Set any other field to null only if it genuinely isn't present in this file.`,
     model: "gpt-4o-mini",
     outputType: CsvStructureSchema,
   });
