@@ -1,6 +1,44 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import type { AgingReport } from "@/lib/reports/aging";
+
+function AgingQuickView() {
+  const [report, setReport] = useState<AgingReport | null>(null);
+
+  useEffect(() => {
+    fetch("/api/reports/aging")
+      .then((r) => r.json())
+      .then((d) => setReport(d.report ?? null));
+  }, []);
+
+  if (!report || report.total_outstanding === 0) return null;
+
+  const overdue30Plus = report.days_31_60.total + report.days_61_90.total + report.days_over_90.total;
+  const fmt = (n: number) => "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+  return (
+    <div className="rounded-xl border border-zinc-900 p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-white">AR Aging Summary</h2>
+        <Link href="/reports" className="text-xs text-zinc-500 hover:text-white transition-colors">Full report →</Link>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Current", value: report.current.total, color: "text-emerald-400" },
+          { label: "1–30 Days", value: report.days_1_30.total, color: "text-yellow-400" },
+          { label: "31–90 Days", value: overdue30Plus, color: "text-red-400" },
+          { label: "Total Due", value: report.total_outstanding, color: "text-white" },
+        ].map((item) => (
+          <div key={item.label}>
+            <p className="text-xs text-zinc-500 mb-1">{item.label}</p>
+            <p className={`text-base font-semibold tabular-nums ${item.color}`}>{fmt(item.value)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface Discrepancy {
   id: string;
@@ -120,6 +158,9 @@ export default function DashboardPage() {
               No data reconciled yet. Upload invoices and a bank statement on the Upload page, then run reconciliation.
             </p>
           )}
+
+          {/* AR Aging quick summary -- always show if there are invoices */}
+          <AgingQuickView />
         </>
       )}
     </div>
